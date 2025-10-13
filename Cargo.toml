@@ -1,0 +1,14 @@
+[package]
+name = "winchain"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+log = "0.4"
+uefi = { version = "0.35", default-features = false, features = ["alloc", "logger", "panic_handler", "global_allocator"] }
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
