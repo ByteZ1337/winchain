@@ -1,23 +1,18 @@
-{ lib, pkgs, config, ... }:
+{ lib, pkgs, config, toolchain, ... }:
 
 let
   inherit (lib) mkOption mkIf mkMerge mkDefault types optionalString;
   cfg = config.boot.loader.systemd-boot.winchain;
 
-  rustToolchain = pkgs.rust-bin.stable.latest.default.override {
-    targets = [ "x86_64-unknown-uefi" ];
-  };
-
   mkWinchain = pkgs.callPackage ./package.nix {
     partuuid = cfg.partuuid or (throw "winchain: set boot.loader.systemd-boot.winchain.partuuid to the PARTUUID of the Windows ESP");
-    toolchain = rustToolchain;
-    rustPlatform = pkgs.rustPlatform;
+    toolchain = toolchain;
   };
 
   systemdEntry = ''
     title ${cfg.title}
     efi ${cfg.outPath}
-    ${optionalString (cfg.sortKey != null) ("sort-key ${cfg.sortKey}")}
+    ${optionalString (cfg.sortKey != null) "sort-key ${cfg.sortKey}"}
   '';
 in
 {
@@ -44,7 +39,7 @@ in
     };
     outPath = mkOption {
       type = types.str;
-      default = "/EFI/shims/winchain.efi";
+      default = "efi/shims/winchain.efi";
       description = "The path to install winchain.efi to (on the systemd-boot ESP)";
     };
   };
@@ -57,7 +52,7 @@ in
     (mkIf cfg.enable {
       boot.loader.systemd-boot = {
         extraFiles."${cfg.outPath}" = "${mkWinchain}/bin/winchain.efi";
-        extraEntries."${cfg.title}" = systemdEntry;
+        extraEntries."${cfg.title}.conf" = systemdEntry;
       };
     })
   ];
