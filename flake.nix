@@ -8,7 +8,7 @@
   };
 
   outputs = { rust-overlay, ... }: {
-    nixosModules.winchain = { lib, pkgs, config, ... }:
+    nixosModules.default = { lib, pkgs, config, ... }:
       let
         rustBin = rust-overlay.lib.mkRustBin { } pkgs;
         rustToolchain = rustBin.fromRustupToolchainFile ./rust-toolchain.toml;
