@@ -117,7 +117,6 @@ fn main() -> Status {
             }
         };
 
-        info!("Loaded image {BOOTLOADER_PATH} on {guid}, booting...");
         let status = boot::start_image(win_handle);
         return match status {
             Ok(_) => Status::SUCCESS,
