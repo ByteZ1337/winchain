@@ -1,12 +1,12 @@
 { lib, pkgs, config, toolchain, ... }:
 
 let
-  inherit (lib) mkOption mkIf mkMerge mkDefault types optionalString;
+  inherit (lib) mkOption mkIf types optionalString;
   cfg = config.boot.loader.systemd-boot.winchain;
 
   mkWinchain = pkgs.callPackage ./package.nix {
     partuuid = cfg.partuuid or (throw "winchain: set boot.loader.systemd-boot.winchain.partuuid to the PARTUUID of the Windows ESP");
-    toolchain = toolchain;
+    inherit lib pkgs toolchain;
   };
 
   systemdEntry = ''
@@ -44,16 +44,8 @@ in
     };
   };
 
-  config = mkMerge [
-    (mkIf (cfg.partuuid != null) {
-      boot.loader.systemd-boot.winchain.enable = mkDefault true;
-    })
-
-    (mkIf cfg.enable {
-      boot.loader.systemd-boot = {
-        extraFiles."${cfg.outPath}" = "${mkWinchain}/bin/winchain.efi";
-        extraEntries."${cfg.title}.conf" = systemdEntry;
-      };
-    })
-  ];
+  config.boot.loader.systemd-boot = mkIf cfg.enable {
+    extraFiles."${cfg.outPath}" = "${mkWinchain}/bin/winchain.efi";
+    extraEntries."${cfg.title}.conf" = systemdEntry;
+  };
 }

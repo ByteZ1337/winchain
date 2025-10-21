@@ -1,34 +1,17 @@
-{ lib, stdenv, toolchain, partuuid}:
+{ lib, partuuid, pkgs, stdenv, toolchain }:
 
 assert lib.assertMsg (builtins.match "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$" partuuid != null) 
   "partuuid must be a valid UUID string, e.g. '123e4567-e89b-12d3-a456-426614174000', got: '${partuuid}'";
 
 let
   cargoTarget = "x86_64-unknown-uefi";
-  vendor = stdenv.mkDerivation {
-    pname = "winchain-cargo-vendor";
-    version = "0";
-    src = ./.;
-    nativeBuildInputs = [ toolchain ];
-
-    outputHashMode = "recursive";
-    outputHashAlgo = "sha256";
-    outputHash = "sha256-iJi6q2smT06R+WN8OjC0ximq9KFpgItcgDhWXhAQTbc=";
-
-    CARGO_HOME = "$TMPDIR/cargo-home";
-    HOME = "$TMPDIR/home";
-    CARGO_REGISTRIES_CRATES_IO_PROTOCOL = "sparse";
-
-    buildPhase = ''
-      mkdir -p "$CARGO_HOME" "$HOME" "$out"
-      cargo vendor --versioned-dirs "$out"
-    '';
-    installPhase = "true";
+  cargoDeps = pkgs.rustPlatform.importCargoLock {
+    lockFile = ./Cargo.lock;
   };
 in 
 stdenv.mkDerivation {
   pname = "winchain";
-  version = "0.1.0";
+  version = "0.1.1";
 
   src = ./.;
   nativeBuildInputs = [ toolchain ];
@@ -41,7 +24,6 @@ stdenv.mkDerivation {
   dontDistribute = true;
 
   CARGO_BUILD_TARGET = cargoTarget;
-  CARGO_NET_OFFLINE = "true";
   CARGO_HOME = "$TMPDIR/cargo-home";
 
   buildPhase = ''
@@ -51,10 +33,8 @@ stdenv.mkDerivation {
     replace-with = "vendored-sources"
 
     [source.vendored-sources]
-    directory = "vendor"
+    directory = "${cargoDeps}"
     EOF
-
-    ln -s ${vendor} vendor
 
     cargo build --release --frozen --offline --target "$CARGO_BUILD_TARGET"
   '';

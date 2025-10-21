@@ -4,7 +4,7 @@
 extern crate alloc;
 
 use alloc::vec;
-use log::{error, info};
+use log::error;
 use uefi::boot::{LoadImageSource, OpenProtocolAttributes, OpenProtocolParams, SearchType};
 use uefi::prelude::*;
 use uefi::proto::media::partition::{PartitionInfo, PartitionType};
