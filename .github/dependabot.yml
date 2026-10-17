@@ -1,0 +1,29 @@
+version: 2
+
+updates:
+  - package-ecosystem: nix
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      inputs:
+        patterns:
+          - "*"
+    commit-message:
+      prefix: "chore(nix)"
+    # Supply chain safety buffer
+    cooldown:
+      default-days: 7
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns:
+          - "*"
+    commit-message:
+      prefix: "chore(ci)"
+    cooldown:
+      default-days: 7
